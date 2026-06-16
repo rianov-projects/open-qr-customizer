@@ -1,0 +1,36 @@
+{
+  "name": "Vue 3 & TypeScript QR Dev",
+  // Usamos una imagen oficial de Microsoft optimizada para Node.js
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
+
+  // Instalamos características adicionales, en este caso 'pnpm' que es el gestor rápido
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "none",
+      "pnpmVersion": "latest"
+    }
+  },
+
+  // Extensiones de VS Code que se instalarán AUTOMÁTICAMENTE dentro del contenedor
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "Vue.volar",               // Soporte oficial para Vue 3
+        "vue.vscode-typescript-vue-plugin", // TypeScript para Vue
+        "dbaeumer.vscode-eslint",  // Corrector de estilo de código
+        "bradlc.vscode-tailwindcss" // Auto-completado de estilos CSS
+      ]
+    }
+  },
+
+  // Expone el puerto 5173 (el que usa Vite por defecto) para que puedas ver la app en el navegador de Windows
+  "forwardPorts": [5173],
+
+  // Mantiene las credenciales de Git de tu WSL (incluyendo tus llaves SSH de GitHub)
+  "mounts": [
+    "source=${localEnv:HOME}/.ssh,target=/home/node/.ssh,type=bind,consistency=cached"
+  ],
+
+  // Comando que se ejecuta automáticamente cuando el contenedor termina de crearse
+  "postCreateCommand": "pnpm --version"
+}
