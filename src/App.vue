@@ -291,6 +291,13 @@ const downloadAs = (format: 'png' | 'jpeg' | 'svg') => {
   if (qrCode) qrCode.download({ name: 'open-qr-code', extension: format })
   isDownloadDropdownOpen.value = false
 }
+
+const resetToDefault = () => {
+  if (confirm('¿Estás seguro de que quieres restablecer todo a los valores de fábrica?')) {
+    localStorage.removeItem(LOCAL_STORAGE_KEY);
+    window.location.reload(); // Recarga para volver al estado inicial definido en los refs
+  }
+}
 </script>
 
 <template>
@@ -607,6 +614,11 @@ const downloadAs = (format: 'png' | 'jpeg' | 'svg') => {
               <button @click="isDownloadDropdownOpen = !isDownloadDropdownOpen" type="button" class="w-full px-4 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-sm font-semibold shadow-lg transition flex items-center justify-between cursor-pointer">
                 <span class="mx-auto pl-2">Descargar Archivo Final</span>
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+              </button>
+
+              <button @click="resetToDefault" type="button" class="w-full mt-3 px-3 py-2 bg-rose-600/10 hover:bg-rose-600/20 border border-rose-500/20 text-rose-400 text-xs font-semibold rounded-xl flex items-center justify-center gap-2 cursor-pointer transition">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+                <span>Reiniciar Valores</span>
               </button>
 
               <div v-if="isDownloadDropdownOpen" class="absolute bottom-full left-0 right-0 mb-2 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-50 overflow-hidden divide-y divide-slate-700/40">
