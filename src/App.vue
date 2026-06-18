@@ -39,7 +39,7 @@ function hslToHex(h: number, s: number, l: number) {
 }
 
 // ================= ESTADOS REACTIVOS PRINCIPALES =================
-const qrText = ref('https://open-qr.com')
+const qrText = ref('https://qr.rianov-projects.com/')
 const qrMargin = ref(10)
 const logoUrl = ref<string | null>(null)
 const logoSize = ref(0.3)
@@ -97,9 +97,9 @@ const eyeDotOptions = [
   { id: 'dot', name: 'Centro Esférico', shapeClass: 'rounded-full' },
 ] as const
 
-const selectedDotType = ref(dotOptions[1])
-const selectedEyeFrameType = ref(eyeFrameOptions[1])
-const selectedEyeDotType = ref(eyeDotOptions[1])
+const selectedDotType = ref<any>(dotOptions[0]);
+const selectedEyeFrameType = ref<any>(eyeFrameOptions[0]);
+const selectedEyeDotType = ref<any>(eyeDotOptions[0]);
 
 const isDropdownOpen = ref(false)
 const isEyeFrameDropdownOpen = ref(false)
@@ -225,7 +225,7 @@ watch([
   }, 80)
 })
 
-const updateHexFromHsl = (key: keyof typeof hslStates.value, refTarget: any) => {
+const updateHexFromHsl = (key: keyof typeof hslStates.value) => {
   const target = hslStates.value[key]
   if (key === 'qr') qrColor.value = hslToHex(target.h, target.s, target.l)
   if (key === 'qr2') qrColor2.value = hslToHex(target.h, target.s, target.l)
