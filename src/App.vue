@@ -43,7 +43,8 @@ function hslToHex(h: number, s: number, l: number) {
 const qrText = ref('https://rianov-projects.com/qr/')
 const qrMargin = ref(10)
 //const logoUrl = ref('/logo-rianov.svg')
-const logoUrl = ref(`${import.meta.env.BASE_URL}logo-rianov.svg`)
+//const logoUrl = ref(`${import.meta.env.BASE_URL}logo-rianov.svg`)
+const logoUrl = ref<string | null>(`${import.meta.env.BASE_URL}logo-rianov.png`)
 const logoSize = ref(0.3)
 
 const qrColorType = ref<'single' | 'gradient'>('single')
