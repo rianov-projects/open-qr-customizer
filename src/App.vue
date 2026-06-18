@@ -39,9 +39,11 @@ function hslToHex(h: number, s: number, l: number) {
 }
 
 // ================= ESTADOS REACTIVOS PRINCIPALES =================
-const qrText = ref('https://qr.rianov-projects.com/')
+//const qrText = ref('https://qr.rianov-projects.com/')
+const qrText = ref('https://rianov-projects.com/qr/')
 const qrMargin = ref(10)
-const logoUrl = ref<string | null>(null)
+//const logoUrl = ref('/logo-rianov.svg')
+const logoUrl = ref(`${import.meta.env.BASE_URL}logo-rianov.svg`)
 const logoSize = ref(0.3)
 
 const qrColorType = ref<'single' | 'gradient'>('single')
@@ -62,6 +64,7 @@ const eyeDotColor2 = ref('#1d4ed8')
 const eyeDotRotation = ref(0)
 
 const activeHslPanel = ref<string | null>(null)
+  
 function toggleHslPanel(panelName: string) {
   activeHslPanel.value = activeHslPanel.value === panelName ? null : panelName
 }
@@ -105,6 +108,19 @@ const isDropdownOpen = ref(false)
 const isEyeFrameDropdownOpen = ref(false)
 const isEyeDotDropdownOpen = ref(false)
 const isDownloadDropdownOpen = ref(false)
+
+// Control de las secciones del acordeón (Contenido abierto por defecto)
+const openSections = ref({
+  content: true,
+  colors: false,
+  design: false,
+  logo: false
+})
+
+// Función para alternar la visibilidad de cada sección
+const toggleSection = (section: keyof typeof openSections.value) => {
+  openSections.value[section] = !openSections.value[section]
+}
 
 const qrContainer = ref<HTMLElement | null>(null)
 let qrCode: QRCodeStyling | null = null
@@ -328,254 +344,333 @@ const resetToDefault = () => {
           <input v-model="qrText" type="text" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-blue-500 transition" placeholder="https://tu-sitio-web.com" />
         </div>
 
-        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700/50 shadow-xl space-y-6 relative">
-          <h2 class="text-lg font-semibold text-white flex items-center gap-2">
-            <span class="text-blue-400">2.</span> Cuerpo y Módulos Base
-          </h2>
+<!-- 2. Personalización de Cuerpo y Fondo-->
+
+        <div 
+          class="bg-slate-800 rounded-2xl border border-slate-700/50 shadow-xl mb-4 transition-all relative"
+          :class="isDropdownOpen || activeHslPanel === 'qr' || activeHslPanel === 'qr2' || activeHslPanel === 'bg' ? 'z-30' : 'z-10'"
+        >
           
-          <div>
-            <label class="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wider">Forma de los Módulos</label>
-            <div class="relative">
-              <button @click="isDropdownOpen = !isDropdownOpen" type="button" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm flex items-center justify-between text-left cursor-pointer">
-                <div class="flex items-center gap-3">
-                  <div class="w-4 h-4 bg-blue-500" :class="selectedDotType.shapeClass"></div>
-                  <span>{{ selectedDotType.name }}</span>
-                </div>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-              </button>
-              <div v-if="isDropdownOpen" class="absolute left-0 right-0 mt-2 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-50 overflow-hidden divide-y divide-slate-700/40">
-                <button v-for="op in dotOptions" :key="op.id" @click="selectedDotType = op; isDropdownOpen = false" class="w-full px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-800 text-left cursor-pointer">
-                  <div class="w-4 h-4 bg-slate-500" :class="op.shapeClass"></div>
-                  <span>{{ op.name }}</span>
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div class="space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-700/40 pb-2">
-              <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Color del Cuerpo</label>
-              <div class="flex bg-slate-900 p-0.5 rounded-lg border border-slate-700">
-                <button @click="qrColorType = 'single'" :class="qrColorType === 'single' ? 'bg-blue-600 text-white':'text-slate-400'" class="text-[11px] font-semibold px-2 py-1 rounded-md transition cursor-pointer">Sólido</button>
-                <button @click="qrColorType = 'gradient'" :class="qrColorType === 'gradient' ? 'bg-blue-600 text-white':'text-slate-400'" class="text-[11px] font-semibold px-2 py-1 rounded-md transition cursor-pointer">Degradado</button>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div class="space-y-1.5 relative">
-                <span class="text-[11px] text-slate-400 font-medium">{{ qrColorType === 'gradient' ? 'Color Inicial':'Color Único' }}</span>
-                <div class="flex gap-2">
-                  <button @click="toggleHslPanel('qr')" :style="{ backgroundColor: qrColor }" class="w-10 h-10 rounded-xl border border-slate-700 relative overflow-hidden cursor-pointer flex items-center justify-center"><span class="text-[9px] text-white bg-black/40 px-1 py-0.5 rounded font-bold">MIX</span></button>
-                  <input v-model="qrColor" type="text" class="w-full bg-slate-900 border border-slate-700 rounded-xl text-center text-xs font-mono uppercase text-white" maxlength="7" />
-                </div>
-                
-                <div v-if="activeHslPanel === 'qr'" class="absolute left-0 mt-2 bg-slate-950 border border-slate-600 p-4 rounded-xl z-[100] space-y-3 w-[260px] shadow-2xl">
-                  <div class="text-xs font-bold text-blue-400 border-b border-slate-800 pb-1 flex justify-between"><span>Ajuste HSL (Cuerpo 1)</span><button @click="activeHslPanel = null" class="text-slate-500 hover:text-white font-bold">X</button></div>
-                  <div class="space-y-1"><div class="flex justify-between text-[11px] text-slate-300"><span>Matiz (H)</span><span class="font-mono">{{ hslStates.qr.h }}°</span></div><input v-model.number="hslStates.qr.h" @input="updateHexFromHsl('qr')" type="range" min="0" max="360" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-blue-500" style="background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)" /></div>
-                  <div class="space-y-1"><div class="flex justify-between text-[11px] text-slate-300"><span>Saturación (S)</span><span class="font-mono">{{ hslStates.qr.s }}%</span></div><input v-model.number="hslStates.qr.s" @input="updateHexFromHsl('qr')" type="range" min="0" max="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-blue-500" :style="{ background: `linear-gradient(to right, #808080, hsl(${hslStates.qr.h}, 100%, 50%))` }" /></div>
-                  <div class="space-y-1"><div class="flex justify-between text-[11px] text-slate-300"><span>Luminosidad (L)</span><span class="font-mono">{{ hslStates.qr.l }}%</span></div><input v-model.number="hslStates.qr.l" @input="updateHexFromHsl('qr')" type="range" min="0" max="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-blue-500" style="background: linear-gradient(to right, #000000, #808080, #ffffff)" /></div>
-                </div>
-              </div>
-
-              <div v-if="qrColorType === 'gradient'" class="space-y-1.5 relative">
-                <span class="text-[11px] text-slate-400 font-medium">Color Secundario</span>
-                <div class="flex gap-2">
-                  <button @click="toggleHslPanel('qr2')" :style="{ backgroundColor: qrColor2 }" class="w-10 h-10 rounded-xl border border-slate-700 relative overflow-hidden cursor-pointer flex items-center justify-center"><span class="text-[9px] text-white bg-black/40 px-1 py-0.5 rounded font-bold">MIX</span></button>
-                  <input v-model="qrColor2" type="text" class="w-full bg-slate-900 border border-slate-700 rounded-xl text-center text-xs font-mono uppercase text-white" maxlength="7" />
-                </div>
-                
-                <div v-if="activeHslPanel === 'qr2'" class="absolute right-0 mt-2 bg-slate-950 border border-slate-600 p-4 rounded-xl z-[100] space-y-3 w-[260px] shadow-2xl">
-                  <div class="text-xs font-bold text-blue-400 border-b border-slate-800 pb-1 flex justify-between"><span>Ajuste HSL (Cuerpo 2)</span><button @click="activeHslPanel = null" class="text-slate-500 hover:text-white font-bold">X</button></div>
-                  <div class="space-y-1"><div class="flex justify-between text-[11px] text-slate-300"><span>Matiz (H)</span><span class="font-mono">{{ hslStates.qr2.h }}°</span></div><input v-model.number="hslStates.qr2.h" @input="updateHexFromHsl('qr2')" type="range" min="0" max="360" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-blue-500" style="background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)" /></div>
-                  <div class="space-y-1"><div class="flex justify-between text-[11px] text-slate-300"><span>Saturación (S)</span><span class="font-mono">{{ hslStates.qr2.s }}%</span></div><input v-model.number="hslStates.qr2.s" @input="updateHexFromHsl('qr2')" type="range" min="0" max="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-blue-500" :style="{ background: `linear-gradient(to right, #808080, hsl(${hslStates.qr2.h}, 100%, 50%))` }" /></div>
-                  <div class="space-y-1"><div class="flex justify-between text-[11px] text-slate-300"><span>Luminosidad (L)</span><span class="font-mono">{{ hslStates.qr2.l }}%</span></div><input v-model.number="hslStates.qr2.l" @input="updateHexFromHsl('qr2')" type="range" min="0" max="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-blue-500" style="background: linear-gradient(to right, #000000, #808080, #ffffff)" /></div>
-                </div>
-              </div>
-            </div>
-
-            <div v-if="qrColorType === 'gradient'" class="pt-2">
-              <div class="flex justify-between text-[11px] text-slate-400 font-medium mb-1"><span>Ángulo del Degradado</span><span>{{ qrGradientRotation }}°</span></div>
-              <input v-model.number="qrGradientRotation" type="range" min="0" max="360" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500" />
-            </div>
-          </div>
-
-          <div class="border-t border-slate-700/40 pt-4 relative">
-            <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Color de Fondo General</label>
-            <div class="flex gap-3 max-w-xs">
-              <button @click="toggleHslPanel('bg')" :style="{ backgroundColor: bgColor }" class="w-10 h-10 rounded-xl border border-slate-700 relative overflow-hidden cursor-pointer flex items-center justify-center"><span class="text-[9px] text-black bg-white/70 px-1 py-0.5 rounded font-bold">MIX</span></button>
-              <input v-model="bgColor" type="text" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono uppercase w-32 text-center text-white" maxlength="7" />
-            </div>
+          <button
+            type="button"
+            @click="toggleSection('colors')"
+            class="w-full flex justify-between items-center p-6 text-left font-semibold text-white hover:bg-slate-700/30 transition cursor-pointer"
+            :class="openSections.colors ? 'rounded-t-2xl' : 'rounded-2xl'"
+          >
+            <span class="flex items-center gap-2 text-lg">
+              <span class="text-blue-400">2.</span> Cuerpo y Módulos Base
+            </span>
             
-            <div v-if="activeHslPanel === 'bg'" class="absolute left-0 mt-2 bg-slate-950 border border-slate-600 p-4 rounded-xl z-[100] space-y-3 w-[260px] shadow-2xl">
-              <div class="text-xs font-bold text-blue-400 border-b border-slate-800 pb-1 flex justify-between"><span>Ajuste HSL (Fondo)</span><button @click="activeHslPanel = null" class="text-slate-500 hover:text-white font-bold">X</button></div>
-              <div class="space-y-1"><div class="flex justify-between text-[11px] text-slate-300"><span>Matiz (H)</span><span class="font-mono">{{ hslStates.bg.h }}°</span></div><input v-model.number="hslStates.bg.h" @input="updateHexFromHsl('bg')" type="range" min="0" max="360" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-blue-500" style="background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)" /></div>
-              <div class="space-y-1"><div class="flex justify-between text-[11px] text-slate-300"><span>Saturación (S)</span><span class="font-mono">{{ hslStates.bg.s }}%</span></div><input v-model.number="hslStates.bg.s" @input="updateHexFromHsl('bg')" type="range" min="0" max="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-blue-500" :style="{ background: `linear-gradient(to right, #808080, hsl(${hslStates.bg.h}, 100%, 50%))` }" /></div>
-              <div class="space-y-1"><div class="flex justify-between text-[11px] text-slate-300"><span>Luminosidad (L)</span><span class="font-mono">{{ hslStates.bg.l }}%</span></div><input v-model.number="hslStates.bg.l" @input="updateHexFromHsl('bg')" type="range" min="0" max="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-blue-500" style="background: linear-gradient(to right, #000000, #808080, #ffffff)" /></div>
-            </div>
-          </div>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 text-slate-400 transition-transform duration-300"
+              :class="{ 'rotate-180': openSections.colors }"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
 
-          <div>
-            <div class="flex justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2"><span>Margen del Código</span><span>{{ qrMargin }}px</span></div>
-            <input v-model.number="qrMargin" type="range" min="0" max="40" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500" />
-          </div>
-        </div>
-
-        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700/50 shadow-xl space-y-6">
-          <div class="border-b border-slate-700/60 pb-3">
-            <h2 class="text-lg font-semibold text-white flex items-center gap-2">
-              <span class="text-indigo-400">3.</span> Personalización de Patrones de Localización
-            </h2>
-          </div>
-
-          <div class="space-y-4 border-b border-slate-700/30 pb-4 relative">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
-              <label class="text-xs font-bold text-slate-300 uppercase tracking-wide">A. Marcos de los Ojos Externos</label>
-              <div class="flex bg-slate-900 p-0.5 rounded-lg border border-slate-700 self-start">
-                <button @click="eyeFrameColorType = 'single'" :class="eyeFrameColorType === 'single'?'bg-indigo-600 text-white':'text-slate-400'" class="text-[10px] font-semibold px-2 py-0.5 rounded cursor-pointer">Sólido</button>
-                <button @click="eyeFrameColorType = 'gradient'" :class="eyeFrameColorType === 'gradient'?'bg-indigo-600 text-white':'text-slate-400'" class="text-[10px] font-semibold px-2 py-0.5 rounded cursor-pointer">Degradado</button>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <span class="text-[11px] text-slate-400 block mb-1">Geometría del Marco</span>
-                <button @click="isEyeFrameDropdownOpen = !isEyeFrameDropdownOpen" type="button" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs flex items-center justify-between text-left cursor-pointer">
-                  <span>{{ selectedEyeFrameType.name }}</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+          <div v-show="openSections.colors" class="p-6 border-t border-slate-700/40 space-y-6">
+                
+            <div>
+              <label class="block text-xs font-semibold text-slate-400 mb-2 uppercase tracking-wider">Forma de los Módulos</label>
+              <div class="relative">
+                <button @click="isDropdownOpen = !isDropdownOpen" type="button" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm flex items-center justify-between text-left cursor-pointer">
+                  <div class="flex items-center gap-3">
+                    <div class="w-4 h-4 bg-blue-500" :class="selectedDotType.shapeClass"></div>
+                    <span>{{ selectedDotType.name }}</span>
+                  </div>
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
                 </button>
-                <div v-if="isEyeFrameDropdownOpen" class="absolute bg-slate-900 border border-slate-700 rounded-xl mt-1 z-50 overflow-hidden divide-y divide-slate-700/40 w-[240px]">
-                  <button v-for="op in eyeFrameOptions" :key="op.id" @click="selectedEyeFrameType = op; isEyeFrameDropdownOpen = false" class="w-full px-3 py-2 text-xs text-left hover:bg-slate-800 cursor-pointer block">{{ op.name }}</button>
-                </div>
-              </div>
-
-              <div class="grid grid-cols-2 gap-2 relative">
-                <div>
-                  <span class="text-[11px] text-slate-400 block mb-1">Color 1</span>
-                  <div class="flex gap-1.5">
-                    <button @click="toggleHslPanel('ef')" :style="{ backgroundColor: eyeFrameColor }" class="w-8 h-8 rounded-lg border border-slate-700 flex-shrink-0 cursor-pointer flex items-center justify-center"><span class="text-[8px] text-white bg-black/40 px-1 rounded font-bold">MIX</span></button>
-                    <input v-model="eyeFrameColor" type="text" class="w-full bg-slate-900 border border-slate-700 rounded-lg text-[10px] font-mono text-center uppercase text-white" maxlength="7" />
-                  </div>
-                  <div v-if="activeHslPanel === 'ef'" class="absolute top-full left-0 mt-2 bg-slate-950 border border-slate-600 p-4 rounded-xl z-[100] space-y-3 w-[240px] shadow-2xl">
-                    <div class="text-[11px] font-bold text-indigo-400 border-b border-slate-800 pb-1 flex justify-between"><span>Marco HSL 1</span><button @click="activeHslPanel = null" class="text-slate-500 font-bold">X</button></div>
-                    <div class="space-y-1"><div class="flex justify-between text-[10px] text-slate-300"><span>H</span><span>{{ hslStates.ef.h }}°</span></div><input v-model.number="hslStates.ef.h" @input="updateHexFromHsl('ef')" type="range" min="0" max="360" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-indigo-500" style="background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)" /></div>
-                    <div class="space-y-1"><div class="flex justify-between text-[10px] text-slate-300"><span>S</span><span>{{ hslStates.ef.s }}%</span></div><input v-model.number="hslStates.ef.s" @input="updateHexFromHsl('ef')" type="range" min="0" max="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-indigo-500" :style="{ background: `linear-gradient(to right, #808080, hsl(${hslStates.ef.h}, 100%, 50%))` }" /></div>
-                    <div class="space-y-1"><div class="flex justify-between text-[10px] text-slate-300"><span>L</span><span>{{ hslStates.ef.l }}%</span></div><input v-model.number="hslStates.ef.l" @input="updateHexFromHsl('ef')" type="range" min="0" max="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-indigo-500" style="background: linear-gradient(to right, #000000, #808080, #ffffff)" /></div>
-                  </div>
-                </div>
-
-                <div v-if="eyeFrameColorType === 'gradient'">
-                  <span class="text-[11px] text-slate-400 block mb-1">Color 2</span>
-                  <div class="flex gap-1.5">
-                    <button @click="toggleHslPanel('ef2')" :style="{ backgroundColor: eyeFrameColor2 }" class="w-8 h-8 rounded-lg border border-slate-700 flex-shrink-0 cursor-pointer flex items-center justify-center"><span class="text-[8px] text-white bg-black/40 px-1 rounded font-bold">MIX</span></button>
-                    <input v-model="eyeFrameColor2" type="text" class="w-full bg-slate-900 border border-slate-700 rounded-lg text-[10px] font-mono text-center uppercase text-white" maxlength="7" />
-                  </div>
-                  <div v-if="activeHslPanel === 'ef2'" class="absolute top-full right-0 mt-2 bg-slate-950 border border-slate-600 p-4 rounded-xl z-[100] space-y-3 w-[240px] shadow-2xl">
-                    <div class="text-[11px] font-bold text-indigo-400 border-b border-slate-800 pb-1 flex justify-between"><span>Marco HSL 2</span><button @click="activeHslPanel = null" class="text-slate-500 font-bold">X</button></div>
-                    <div class="space-y-1"><div class="flex justify-between text-[10px] text-slate-300"><span>H</span><span>{{ hslStates.ef2.h }}°</span></div><input v-model.number="hslStates.ef2.h" @input="updateHexFromHsl('ef2')" type="range" min="0" max="360" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-indigo-500" style="background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)" /></div>
-                    <div class="space-y-1"><div class="flex justify-between text-[10px] text-slate-300"><span>S</span><span>{{ hslStates.ef2.s }}%</span></div><input v-model.number="hslStates.ef2.s" @input="updateHexFromHsl('ef2')" type="range" min="0" max="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-indigo-500" :style="{ background: `linear-gradient(to right, #808080, hsl(${hslStates.ef2.h}, 100%, 50%))` }" /></div>
-                    <div class="space-y-1"><div class="flex justify-between text-[10px] text-slate-300"><span>L</span><span>{{ hslStates.ef2.l }}%</span></div><input v-model.number="hslStates.ef2.l" @input="updateHexFromHsl('ef2')" type="range" min="0" max="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-indigo-500" style="background: linear-gradient(to right, #000000, #808080, #ffffff)" /></div>
-                  </div>
+                <div v-if="isDropdownOpen" class="absolute left-0 right-0 mt-2 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-50 overflow-hidden divide-y divide-slate-700/40">
+                  <button v-for="op in dotOptions" :key="op.id" @click="selectedDotType = op; isDropdownOpen = false" class="w-full px-4 py-3 text-sm flex items-center gap-3 hover:bg-slate-800 text-left cursor-pointer">
+                    <div class="w-4 h-4 bg-slate-500" :class="op.shapeClass"></div>
+                    <span>{{ op.name }}</span>
+                  </button>
                 </div>
               </div>
             </div>
-            <div v-if="eyeFrameColorType === 'gradient'" class="flex justify-between items-center text-[10px] text-slate-400">
-              <span>Giro del Marco: {{ eyeFrameRotation }}°</span>
-              <input v-model.number="eyeFrameRotation" type="range" min="0" max="360" class="w-1/2 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500" />
-            </div>
-          </div>
 
-          <div class="space-y-4 relative">
-            <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
-              <label class="text-xs font-bold text-slate-300 uppercase tracking-wide">B. Pupilas Internas (Centros)</label>
-              <div class="flex bg-slate-900 p-0.5 rounded-lg border border-slate-700 self-start">
-                <button @click="eyeDotColorType = 'single'" :class="eyeDotColorType === 'single'?'bg-indigo-600 text-white':'text-slate-400'" class="text-[10px] font-semibold px-2 py-0.5 rounded cursor-pointer">Sólido</button>
-                <button @click="eyeDotColorType = 'gradient'" :class="eyeDotColorType === 'gradient'?'bg-indigo-600 text-white':'text-slate-400'" class="text-[10px] font-semibold px-2 py-0.5 rounded cursor-pointer">Degradado</button>
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <span class="text-[11px] text-slate-400 block mb-1">Geometría de la Pupila</span>
-                <button @click="isEyeDotDropdownOpen = !isEyeDotDropdownOpen" type="button" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs flex items-center justify-between text-left cursor-pointer">
-                  <span>{{ selectedEyeDotType.name }}</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
-                </button>
-                <div v-if="isEyeDotDropdownOpen" class="absolute bg-slate-900 border border-slate-700 rounded-xl mt-1 z-50 overflow-hidden divide-y divide-slate-700/40 w-[240px]">
-                  <button v-for="op in eyeDotOptions" :key="op.id" @click="selectedEyeDotType = op; isEyeDotDropdownOpen = false" class="w-full px-3 py-2 text-xs text-left hover:bg-slate-800 cursor-pointer block">{{ op.name }}</button>
+            <div class="space-y-4">
+              <div class="flex items-center justify-between border-b border-slate-700/40 pb-2">
+                <label class="text-xs font-semibold text-slate-400 uppercase tracking-wider">Color del Cuerpo</label>
+                <div class="flex bg-slate-900 p-0.5 rounded-lg border border-slate-700">
+                  <button @click="qrColorType = 'single'" :class="qrColorType === 'single' ? 'bg-blue-600 text-white':'text-slate-400'" class="text-[11px] font-semibold px-2 py-1 rounded-md transition cursor-pointer">Sólido</button>
+                  <button @click="qrColorType = 'gradient'" :class="qrColorType === 'gradient' ? 'bg-blue-600 text-white':'text-slate-400'" class="text-[11px] font-semibold px-2 py-1 rounded-md transition cursor-pointer">Degradado</button>
                 </div>
               </div>
 
-              <div class="grid grid-cols-2 gap-2 relative">
-                <div>
-                  <span class="text-[11px] text-slate-400 block mb-1">Color 1</span>
-                  <div class="flex gap-1.5">
-                    <button @click="toggleHslPanel('ed')" :style="{ backgroundColor: eyeDotColor }" class="w-8 h-8 rounded-lg border border-slate-700 flex-shrink-0 cursor-pointer flex items-center justify-center"><span class="text-[8px] text-white bg-black/40 px-1 rounded font-bold">MIX</span></button>
-                    <input v-model="eyeDotColor" type="text" class="w-full bg-slate-900 border border-slate-700 rounded-lg text-[10px] font-mono text-center uppercase text-white" maxlength="7" />
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="space-y-1.5 relative">
+                  <span class="text-[11px] text-slate-400 font-medium">{{ qrColorType === 'gradient' ? 'Color Inicial':'Color Único' }}</span>
+                  <div class="flex gap-2">
+                    <button @click="toggleHslPanel('qr')" :style="{ backgroundColor: qrColor }" class="w-10 h-10 rounded-xl border border-slate-700 relative overflow-hidden cursor-pointer flex items-center justify-center"><span class="text-[9px] text-white bg-black/40 px-1 py-0.5 rounded font-bold">MIX</span></button>
+                    <input v-model="qrColor" type="text" class="w-full bg-slate-900 border border-slate-700 rounded-xl text-center text-xs font-mono uppercase text-white" maxlength="7" />
                   </div>
-                  <div v-if="activeHslPanel === 'ed'" class="absolute top-full left-0 mt-2 bg-slate-950 border border-slate-600 p-4 rounded-xl z-[100] space-y-3 w-[240px] shadow-2xl">
-                    <div class="text-[11px] font-bold text-indigo-400 border-b border-slate-800 pb-1 flex justify-between"><span>Pupila HSL 1</span><button @click="activeHslPanel = null" class="text-slate-500 font-bold">X</button></div>
-                    <div class="space-y-1"><div class="flex justify-between text-[10px] text-slate-300"><span>H</span><span>{{ hslStates.ed.h }}°</span></div><input v-model.number="hslStates.ed.h" @input="updateHexFromHsl('ed')" type="range" min="0" max="360" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-indigo-500" style="background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)" /></div>
-                    <div class="space-y-1"><div class="flex justify-between text-[10px] text-slate-300"><span>S</span><span>{{ hslStates.ed.s }}%</span></div><input v-model.number="hslStates.ed.s" @input="updateHexFromHsl('ed')" type="range" min="0" max="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-indigo-500" :style="{ background: `linear-gradient(to right, #808080, hsl(${hslStates.ed.h}, 100%, 50%))` }" /></div>
-                    <div class="space-y-1"><div class="flex justify-between text-[10px] text-slate-300"><span>L</span><span>{{ hslStates.ed.l }}%</span></div><input v-model.number="hslStates.ed.l" @input="updateHexFromHsl('ed')" type="range" min="0" max="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-indigo-500" style="background: linear-gradient(to right, #000000, #808080, #ffffff)" /></div>
+                
+                  <div v-if="activeHslPanel === 'qr'" class="absolute left-0 mt-2 bg-slate-950 border border-slate-600 p-4 rounded-xl z-[100] space-y-3 w-[260px] shadow-2xl">
+                    <div class="text-xs font-bold text-blue-400 border-b border-slate-800 pb-1 flex justify-between"><span>Ajuste HSL (Cuerpo 1)</span><button @click="activeHslPanel = null" class="text-slate-500 hover:text-white font-bold">X</button></div>
+                    <div class="space-y-1"><div class="flex justify-between text-[11px] text-slate-300"><span>Matiz (H)</span><span class="font-mono">{{ hslStates.qr.h }}°</span></div><input v-model.number="hslStates.qr.h" @input="updateHexFromHsl('qr')" type="range" min="0" max="360" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-blue-500" style="background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)" /></div>
+                    <div class="space-y-1"><div class="flex justify-between text-[11px] text-slate-300"><span>Saturación (S)</span><span class="font-mono">{{ hslStates.qr.s }}%</span></div><input v-model.number="hslStates.qr.s" @input="updateHexFromHsl('qr')" type="range" min="0" max="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-blue-500" :style="{ background: `linear-gradient(to right, #808080, hsl(${hslStates.qr.h}, 100%, 50%))` }" /></div>
+                    <div class="space-y-1"><div class="flex justify-between text-[11px] text-slate-300"><span>Luminosidad (L)</span><span class="font-mono">{{ hslStates.qr.l }}%</span></div><input v-model.number="hslStates.qr.l" @input="updateHexFromHsl('qr')" type="range" min="0" max="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-blue-500" style="background: linear-gradient(to right, #000000, #808080, #ffffff)" /></div>
                   </div>
                 </div>
 
-                <div v-if="eyeDotColorType === 'gradient'">
-                  <span class="text-[11px] text-slate-400 block mb-1">Color 2</span>
-                  <div class="flex gap-1.5">
-                    <button @click="toggleHslPanel('ed2')" :style="{ backgroundColor: eyeDotColor2 }" class="w-8 h-8 rounded-lg border border-slate-700 flex-shrink-0 cursor-pointer flex items-center justify-center"><span class="text-[8px] text-white bg-black/40 px-1 rounded font-bold">MIX</span></button>
-                    <input v-model="eyeDotColor2" type="text" class="w-full bg-slate-900 border border-slate-700 rounded-lg text-[10px] font-mono text-center uppercase text-white" maxlength="7" />
+                <div v-if="qrColorType === 'gradient'" class="space-y-1.5 relative">
+                  <span class="text-[11px] text-slate-400 font-medium">Color Secundario</span>
+                  <div class="flex gap-2">
+                    <button @click="toggleHslPanel('qr2')" :style="{ backgroundColor: qrColor2 }" class="w-10 h-10 rounded-xl border border-slate-700 relative overflow-hidden cursor-pointer flex items-center justify-center"><span class="text-[9px] text-white bg-black/40 px-1 py-0.5 rounded font-bold">MIX</span></button>
+                    <input v-model="qrColor2" type="text" class="w-full bg-slate-900 border border-slate-700 rounded-xl text-center text-xs font-mono uppercase text-white" maxlength="7" />
                   </div>
-                  <div v-if="activeHslPanel === 'ed2'" class="absolute top-full right-0 mt-2 bg-slate-950 border border-slate-600 p-4 rounded-xl z-[100] space-y-3 w-[240px] shadow-2xl">
-                    <div class="text-[11px] font-bold text-indigo-400 border-b border-slate-800 pb-1 flex justify-between"><span>Pupila HSL 2</span><button @click="activeHslPanel = null" class="text-slate-500 font-bold">X</button></div>
-                    <div class="space-y-1"><div class="flex justify-between text-[10px] text-slate-300"><span>H</span><span>{{ hslStates.ed2.h }}°</span></div><input v-model.number="hslStates.ed2.h" @input="updateHexFromHsl('ed2')" type="range" min="0" max="360" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-indigo-500" style="background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)" /></div>
-                    <div class="space-y-1"><div class="flex justify-between text-[10px] text-slate-300"><span>S</span><span>{{ hslStates.ed2.s }}%</span></div><input v-model.number="hslStates.ed2.s" @input="updateHexFromHsl('ed2')" type="range" min="0" max="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-indigo-500" :style="{ background: `linear-gradient(to right, #808080, hsl(${hslStates.ed2.h}, 100%, 50%))` }" /></div>
-                    <div class="space-y-1"><div class="flex justify-between text-[10px] text-slate-300"><span>L</span><span>{{ hslStates.ed2.l }}%</span></div><input v-model.number="hslStates.ed2.l" @input="updateHexFromHsl('ed2')" type="range" min="0" max="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-indigo-500" style="background: linear-gradient(to right, #000000, #808080, #ffffff)" /></div>
+                
+                  <div v-if="activeHslPanel === 'qr2'" class="absolute right-0 mt-2 bg-slate-950 border border-slate-600 p-4 rounded-xl z-[100] space-y-3 w-[260px] shadow-2xl">
+                    <div class="text-xs font-bold text-blue-400 border-b border-slate-800 pb-1 flex justify-between"><span>Ajuste HSL (Cuerpo 2)</span><button @click="activeHslPanel = null" class="text-slate-500 hover:text-white font-bold">X</button></div>
+                    <div class="space-y-1"><div class="flex justify-between text-[11px] text-slate-300"><span>Matiz (H)</span><span class="font-mono">{{ hslStates.qr2.h }}°</span></div><input v-model.number="hslStates.qr2.h" @input="updateHexFromHsl('qr2')" type="range" min="0" max="360" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-blue-500" style="background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)" /></div>
+                    <div class="space-y-1"><div class="flex justify-between text-[11px] text-slate-300"><span>Saturación (S)</span><span class="font-mono">{{ hslStates.qr2.s }}%</span></div><input v-model.number="hslStates.qr2.s" @input="updateHexFromHsl('qr2')" type="range" min="0" max="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-blue-500" :style="{ background: `linear-gradient(to right, #808080, hsl(${hslStates.qr2.h}, 100%, 50%))` }" /></div>
+                    <div class="space-y-1"><div class="flex justify-between text-[11px] text-slate-300"><span>Luminosidad (L)</span><span class="font-mono">{{ hslStates.qr2.l }}%</span></div><input v-model.number="hslStates.qr2.l" @input="updateHexFromHsl('qr2')" type="range" min="0" max="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-blue-500" style="background: linear-gradient(to right, #000000, #808080, #ffffff)" /></div>
                   </div>
                 </div>
               </div>
+
+              <div v-if="qrColorType === 'gradient'" class="pt-2">
+                <div class="flex justify-between text-[11px] text-slate-400 font-medium mb-1"><span>Ángulo del Degradado</span><span>{{ qrGradientRotation }}°</span></div>
+                <input v-model.number="qrGradientRotation" type="range" min="0" max="360" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500" />
+              </div>
             </div>
-            <div v-if="eyeDotColorType === 'gradient'" class="flex justify-between items-center text-[10px] text-slate-400">
-              <span>Giro de la Pupila: {{ eyeDotRotation }}°</span>
-              <input v-model.number="eyeDotRotation" type="range" min="0" max="360" class="w-1/2 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500" />
+
+            <div class="border-t border-slate-700/40 pt-4 relative">
+              <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">Color de Fondo General</label>
+              <div class="flex gap-3 max-w-xs">
+                <button @click="toggleHslPanel('bg')" :style="{ backgroundColor: bgColor }" class="w-10 h-10 rounded-xl border border-slate-700 relative overflow-hidden cursor-pointer flex items-center justify-center"><span class="text-[9px] text-black bg-white/70 px-1 py-0.5 rounded font-bold">MIX</span></button>
+                <input v-model="bgColor" type="text" class="bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs font-mono uppercase w-32 text-center text-white" maxlength="7" />
+              </div>
+            
+              <div v-if="activeHslPanel === 'bg'" class="absolute left-0 mt-2 bg-slate-950 border border-slate-600 p-4 rounded-xl z-[100] space-y-3 w-[260px] shadow-2xl">
+                <div class="text-xs font-bold text-blue-400 border-b border-slate-800 pb-1 flex justify-between"><span>Ajuste HSL (Fondo)</span><button @click="activeHslPanel = null" class="text-slate-500 hover:text-white font-bold">X</button></div>
+                <div class="space-y-1"><div class="flex justify-between text-[11px] text-slate-300"><span>Matiz (H)</span><span class="font-mono">{{ hslStates.bg.h }}°</span></div><input v-model.number="hslStates.bg.h" @input="updateHexFromHsl('bg')" type="range" min="0" max="360" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-blue-500" style="background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)" /></div>
+                <div class="space-y-1"><div class="flex justify-between text-[11px] text-slate-300"><span>Saturación (S)</span><span class="font-mono">{{ hslStates.bg.s }}%</span></div><input v-model.number="hslStates.bg.s" @input="updateHexFromHsl('bg')" type="range" min="0" max="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-blue-500" :style="{ background: `linear-gradient(to right, #808080, hsl(${hslStates.bg.h}, 100%, 50%))` }" /></div>
+                <div class="space-y-1"><div class="flex justify-between text-[11px] text-slate-300"><span>Luminosidad (L)</span><span class="font-mono">{{ hslStates.bg.l }}%</span></div><input v-model.number="hslStates.bg.l" @input="updateHexFromHsl('bg')" type="range" min="0" max="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-blue-500" style="background: linear-gradient(to right, #000000, #808080, #ffffff)" /></div>
+              </div>
+            </div>
+
+            <div>
+              <div class="flex justify-between text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2"><span>Margen del Código</span><span>{{ qrMargin }}px</span></div>
+              <input v-model.number="qrMargin" type="range" min="0" max="40" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500" />
             </div>
           </div>
         </div>
 
-        <div class="bg-slate-800 p-6 rounded-2xl border border-slate-700/50 shadow-xl space-y-4">
-          <h2 class="text-lg font-semibold text-white flex items-center gap-2">
-            <span class="text-blue-400">4.</span> Logotipo de Marca
-          </h2>
+<!-- 3. Personalización de Patrones de Localización-->
+
+        <div class="bg-slate-800 rounded-2xl border border-slate-700/50 shadow-xl mb-4 transition-all relative">
           
-          <div v-if="!logoUrl" class="border-2 border-dashed border-slate-700 hover:border-blue-500/50 rounded-xl p-6 text-center cursor-pointer bg-slate-900/40 group">
-            <input @change="handleLogoUpload" type="file" accept="image/*" class="hidden" id="logo-file" />
-            <label for="logo-file" class="cursor-pointer flex flex-col items-center gap-2 text-slate-400 text-sm">
-              <span class="font-medium group-hover:text-slate-200">Haz clic para cargar tu logotipo</span>
-              <span class="text-xs text-slate-500">Soporta PNG, JPG o SVG (Recomendado transparente)</span>
-            </label>
+          <button
+            type="button"
+            @click="toggleSection('design')"
+            class="w-full flex justify-between items-center p-6 text-left font-semibold text-white hover:bg-slate-700/30 transition cursor-pointer"
+            :class="openSections.design ? 'rounded-t-2xl' : 'rounded-2xl'"
+          >
+            <span class="flex items-center gap-2 text-lg">
+              <span class="text-indigo-400">3.</span> Personalización de Patrones de Localización
+            </span>
+            
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 text-slate-400 transition-transform duration-300"
+              :class="{ 'rotate-180': openSections.design }"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+
+          <div v-show="openSections.design" class="p-6 border-t border-slate-700/40 space-y-6">
+            
+            <div 
+              class="space-y-4 border-b border-slate-700/30 pb-4 relative"
+              :class="isEyeFrameDropdownOpen || activeHslPanel === 'ef' || activeHslPanel === 'ef2' ? 'z-20' : 'z-10'"
+            >
+              <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                <label class="text-xs font-bold text-slate-300 uppercase tracking-wide">A. Marcos de los Ojos Externos</label>
+                <div class="flex bg-slate-900 p-0.5 rounded-lg border border-slate-700 self-start">
+                  <button @click="eyeFrameColorType = 'single'" :class="eyeFrameColorType === 'single'?'bg-indigo-600 text-white':'text-slate-400'" class="text-[10px] font-semibold px-2 py-0.5 rounded cursor-pointer">Sólido</button>
+                  <button @click="eyeFrameColorType = 'gradient'" :class="eyeFrameColorType === 'gradient'?'bg-indigo-600 text-white':'text-slate-400'" class="text-[10px] font-semibold px-2 py-0.5 rounded cursor-pointer">Degradado</button>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="relative">
+                  <span class="text-[11px] text-slate-400 block mb-1">Geometría del Marco</span>
+                  <button @click="isEyeFrameDropdownOpen = !isEyeFrameDropdownOpen" type="button" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs flex items-center justify-between text-left cursor-pointer">
+                    <span>{{ selectedEyeFrameType.name }}</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                  </button>
+                  <div v-if="isEyeFrameDropdownOpen" class="absolute left-0 right-0 mt-1 bg-slate-900 border border-slate-700 rounded-xl z-50 overflow-hidden divide-y divide-slate-700/40 shadow-2xl">
+                    <button v-for="op in eyeFrameOptions" :key="op.id" @click="selectedEyeFrameType = op; isEyeFrameDropdownOpen = false" class="w-full px-3 py-2 text-xs text-left hover:bg-slate-800 cursor-pointer block text-white">{{ op.name }}</button>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 relative">
+                  <div>
+                    <span class="text-[11px] text-slate-400 block mb-1">Color 1</span>
+                    <div class="flex gap-1.5">
+                      <button @click="toggleHslPanel('ef')" :style="{ backgroundColor: eyeFrameColor }" class="w-8 h-8 rounded-lg border border-slate-700 flex-shrink-0 cursor-pointer flex items-center justify-center"><span class="text-[8px] text-white bg-black/40 px-1 rounded font-bold">MIX</span></button>
+                      <input v-model="eyeFrameColor" type="text" class="w-full bg-slate-900 border border-slate-700 rounded-lg text-[10px] font-mono text-center uppercase text-white" maxlength="7" />
+                    </div>
+                    <div v-if="activeHslPanel === 'ef'" class="absolute top-full left-0 mt-2 bg-slate-900 border border-slate-600 p-4 rounded-xl z-[100] space-y-3 w-[240px] shadow-2xl">
+                      <div class="text-[11px] font-bold text-indigo-400 border-b border-slate-800 pb-1 flex justify-between"><span>Marco HSL 1</span><button @click="activeHslPanel = null" class="text-slate-500 font-bold">X</button></div>
+                      <div class="space-y-1"><div class="flex justify-between text-[10px] text-slate-300"><span>H</span><span>{{ hslStates.ef.h }}°</span></div><input v-model.number="hslStates.ef.h" @input="updateHexFromHsl('ef')" type="range" min="0" max="360" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-indigo-500" style="background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)" /></div>
+                      <div class="space-y-1"><div class="flex justify-between text-[10px] text-slate-300"><span>S</span><span>{{ hslStates.ef.s }}%</span></div><input v-model.number="hslStates.ef.s" @input="updateHexFromHsl('ef')" type="range" min="0" max="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-indigo-500" :style="{ background: `linear-gradient(to right, #808080, hsl(${hslStates.ef.h}, 100%, 50%))` }" /></div>
+                      <div class="space-y-1"><div class="flex justify-between text-[10px] text-slate-300"><span>L</span><span>{{ hslStates.ef.l }}%</span></div><input v-model.number="hslStates.ef.l" @input="updateHexFromHsl('ef')" type="range" min="0" max="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-indigo-500" style="background: linear-gradient(to right, #000000, #808080, #ffffff)" /></div>
+                    </div>
+                  </div>
+
+                  <div v-if="eyeFrameColorType === 'gradient'">
+                    <span class="text-[11px] text-slate-400 block mb-1">Color 2</span>
+                    <div class="flex gap-1.5">
+                      <button @click="toggleHslPanel('ef2')" :style="{ backgroundColor: eyeFrameColor2 }" class="w-8 h-8 rounded-lg border border-slate-700 flex-shrink-0 cursor-pointer flex items-center justify-center"><span class="text-[8px] text-white bg-black/40 px-1 rounded font-bold">MIX</span></button>
+                      <input v-model="eyeFrameColor2" type="text" class="w-full bg-slate-900 border border-slate-700 rounded-lg text-[10px] font-mono text-center uppercase text-white" maxlength="7" />
+                    </div>
+                    <div v-if="activeHslPanel === 'ef2'" class="absolute top-full right-0 mt-2 bg-slate-950 border border-slate-600 p-4 rounded-xl z-[100] space-y-3 w-[240px] shadow-2xl">
+                      <div class="text-[11px] font-bold text-indigo-400 border-b border-slate-800 pb-1 flex justify-between"><span>Marco HSL 2</span><button @click="activeHslPanel = null" class="text-slate-500 font-bold">X</button></div>
+                      <div class="space-y-1"><div class="flex justify-between text-[10px] text-slate-300"><span>H</span><span>{{ hslStates.ef2.h }}°</span></div><input v-model.number="hslStates.ef2.h" @input="updateHexFromHsl('ef2')" type="range" min="0" max="360" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-indigo-500" style="background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)" /></div>
+                      <div class="space-y-1"><div class="flex justify-between text-[10px] text-slate-300"><span>S</span><span>{{ hslStates.ef2.s }}%</span></div><input v-model.number="hslStates.ef2.s" @input="updateHexFromHsl('ef2')" type="range" min="0" max="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-indigo-500" :style="{ background: `linear-gradient(to right, #808080, hsl(${hslStates.ef2.h}, 100%, 50%))` }" /></div>
+                      <div class="space-y-1"><div class="flex justify-between text-[10px] text-slate-300"><span>L</span><span>{{ hslStates.ef2.l }}%</span></div><input v-model.number="hslStates.ef2.l" @input="updateHexFromHsl('ef2')" type="range" min="0" max="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-indigo-500" style="background: linear-gradient(to right, #000000, #808080, #ffffff)" /></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div v-if="eyeFrameColorType === 'gradient'" class="flex justify-between items-center text-[10px] text-slate-400">
+                <span>Giro del Marco: {{ eyeFrameRotation }}°</span>
+                <input v-model.number="eyeFrameRotation" type="range" min="0" max="360" class="w-1/2 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500" />
+              </div>
+            </div>
+
+            <div 
+              class="space-y-4 relative"
+              :class="isEyeDotDropdownOpen || activeHslPanel === 'ed' || activeHslPanel === 'ed2' ? 'z-20' : 'z-10'"
+            >
+              <div class="flex flex-col md:flex-row md:items-center justify-between gap-2">
+                <label class="text-xs font-bold text-slate-300 uppercase tracking-wide">B. Pupilas Internas (Centros)</label>
+                <div class="flex bg-slate-900 p-0.5 rounded-lg border border-slate-700 self-start">
+                  <button @click="eyeDotColorType = 'single'" :class="eyeDotColorType === 'single'?'bg-indigo-600 text-white':'text-slate-400'" class="text-[10px] font-semibold px-2 py-0.5 rounded cursor-pointer">Sólido</button>
+                  <button @click="eyeDotColorType = 'gradient'" :class="eyeDotColorType === 'gradient'?'bg-indigo-600 text-white':'text-slate-400'" class="text-[10px] font-semibold px-2 py-0.5 rounded cursor-pointer">Degradado</button>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="relative">
+                  <span class="text-[11px] text-slate-400 block mb-1">Geometría de la Pupila</span>
+                  <button @click="isEyeDotDropdownOpen = !isEyeDotDropdownOpen" type="button" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-xs flex items-center justify-between text-left cursor-pointer">
+                    <span>{{ selectedEyeDotType.name }}</span>
+                    <svg xmlns="http://www.w3.org/2000/xl" class="h-3 w-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" /></svg>
+                  </button>
+                  <div v-if="isEyeDotDropdownOpen" class="absolute left-0 right-0 mt-1 bg-slate-900 border border-slate-700 rounded-xl z-50 overflow-hidden divide-y divide-slate-700/40 shadow-2xl">
+                    <button v-for="op in eyeDotOptions" :key="op.id" @click="selectedEyeDotType = op; isEyeDotDropdownOpen = false" class="w-full px-3 py-2 text-xs text-left hover:bg-slate-800 cursor-pointer block text-white">{{ op.name }}</button>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-2 relative">
+                  <div>
+                    <span class="text-[11px] text-slate-400 block mb-1">Color 1</span>
+                    <div class="flex gap-1.5">
+                      <button @click="toggleHslPanel('ed')" :style="{ backgroundColor: eyeDotColor }" class="w-8 h-8 rounded-lg border border-slate-700 flex-shrink-0 cursor-pointer flex items-center justify-center"><span class="text-[8px] text-white bg-black/40 px-1 rounded font-bold">MIX</span></button>
+                      <input v-model="eyeDotColor" type="text" class="w-full bg-slate-900 border border-slate-700 rounded-lg text-[10px] font-mono text-center uppercase text-white" maxlength="7" />
+                    </div>
+                    <div v-if="activeHslPanel === 'ed'" class="absolute top-full left-0 mt-2 bg-slate-950 border border-slate-600 p-4 rounded-xl z-[100] space-y-3 w-[240px] shadow-2xl">
+                      <div class="text-[11px] font-bold text-indigo-400 border-b border-slate-800 pb-1 flex justify-between"><span>Pupila HSL 1</span><button @click="activeHslPanel = null" class="text-slate-500 font-bold">X</button></div>
+                      <div class="space-y-1"><div class="flex justify-between text-[10px] text-slate-300"><span>H</span><span>{{ hslStates.ed.h }}°</span></div><input v-model.number="hslStates.ed.h" @input="updateHexFromHsl('ed')" type="range" min="0" max="360" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-indigo-500" style="background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)" /></div>
+                      <div class="space-y-1"><div class="flex justify-between text-[10px] text-slate-300"><span>S</span><span>{{ hslStates.ed.s }}%</span></div><input v-model.number="hslStates.ed.s" @input="updateHexFromHsl('ed')" type="range" min="0" max="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-indigo-500" :style="{ background: `linear-gradient(to right, #808080, hsl(${hslStates.ed.h}, 100%, 50%))` }" /></div>
+                      <div class="space-y-1"><div class="flex justify-between text-[10px] text-slate-300"><span>L</span><span>{{ hslStates.ed.l }}%</span></div><input v-model.number="hslStates.ed.l" @input="updateHexFromHsl('ed')" type="range" min="0" max="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-indigo-500" style="background: linear-gradient(to right, #000000, #808080, #ffffff)" /></div>
+                    </div>
+                  </div>
+
+                  <div v-if="eyeDotColorType === 'gradient'">
+                    <span class="text-[11px] text-slate-400 block mb-1">Color 2</span>
+                    <div class="flex gap-1.5">
+                      <button @click="toggleHslPanel('ed2')" :style="{ backgroundColor: eyeDotColor2 }" class="w-8 h-8 rounded-lg border border-slate-700 flex-shrink-0 cursor-pointer flex items-center justify-center"><span class="text-[8px] text-white bg-black/40 px-1 rounded font-bold">MIX</span></button>
+                      <input v-model="eyeDotColor2" type="text" class="w-full bg-slate-900 border border-slate-700 rounded-lg text-[10px] font-mono text-center uppercase text-white" maxlength="7" />
+                    </div>
+                    <div v-if="activeHslPanel === 'ed2'" class="absolute top-full right-0 mt-2 bg-slate-950 border border-slate-600 p-4 rounded-xl z-[100] space-y-3 w-[240px] shadow-2xl">
+                      <div class="text-[11px] font-bold text-indigo-400 border-b border-slate-800 pb-1 flex justify-between"><span>Pupila HSL 2</span><button @click="activeHslPanel = null" class="text-slate-500 font-bold">X</button></div>
+                      <div class="space-y-1"><div class="flex justify-between text-[10px] text-slate-300"><span>H</span><span>{{ hslStates.ed2.h }}°</span></div><input v-model.number="hslStates.ed2.h" @input="updateHexFromHsl('ed2')" type="range" min="0" max="360" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-indigo-500" style="background: linear-gradient(to right, #ff0000, #ffff00, #00ff00, #00ffff, #0000ff, #ff00ff, #ff0000)" /></div>
+                      <div class="space-y-1"><div class="flex justify-between text-[10px] text-slate-300"><span>S</span><span>{{ hslStates.ed2.s }}%</span></div><input v-model.number="hslStates.ed2.s" @input="updateHexFromHsl('ed2')" type="range" min="0" max="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-indigo-500" :style="{ background: `linear-gradient(to right, #808080, hsl(${hslStates.ed2.h}, 100%, 50%))` }" /></div>
+                      <div class="space-y-1"><div class="flex justify-between text-[10px] text-slate-300"><span>L</span><span>{{ hslStates.ed2.l }}%</span></div><input v-model.number="hslStates.ed2.l" @input="updateHexFromHsl('ed2')" type="range" min="0" max="100" class="w-full h-2 rounded-lg appearance-none cursor-pointer accent-indigo-500" style="background: linear-gradient(to right, #000000, #808080, #ffffff)" /></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div v-if="eyeDotColorType === 'gradient'" class="flex justify-between items-center text-[10px] text-slate-400">
+                <span>Giro de la Pupila: {{ eyeDotRotation }}°</span>
+                <input v-model.number="eyeDotRotation" type="range" min="0" max="360" class="w-1/2 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500" />
+              </div>
+            </div>
+
           </div>
+        </div>
+<!-- 4. Logotipo de Marca -->
+        <div class="bg-slate-800 rounded-2xl border border-slate-700/50 shadow-xl mb-4 transition-all relative">
+          
+          <button
+            type="button"
+            @click="toggleSection('logo')"
+            class="w-full flex justify-between items-center p-6 text-left font-semibold text-white hover:bg-slate-700/30 transition cursor-pointer"
+            :class="openSections.logo ? 'rounded-t-2xl' : 'rounded-2xl'"
+          >
+            <span class="flex items-center gap-2 text-lg">
+              <span class="text-blue-400">4.</span> Logotipo de Marca
+            </span>
+            
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              class="h-5 w-5 text-slate-400 transition-transform duration-300"
+              :class="{ 'rotate-180': openSections.logo }"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
 
-          <div v-else class="space-y-4">
-            <div class="bg-slate-900 border border-slate-700 rounded-xl p-4 flex items-center justify-between gap-4">
-              <div class="flex items-center gap-3">
-                <div class="w-12 h-12 bg-white rounded-lg p-1 flex items-center justify-center border overflow-hidden">
-                  <img :src="logoUrl" alt="Logo preview" class="max-w-full max-h-full object-contain" />
-                </div>
-                <div>
-                  <p class="text-sm font-medium text-slate-200">Logotipo incrustado</p>
-                  <p class="text-xs text-slate-500">Módulos colapsados para evitar colisiones.</p>
-                </div>
-              </div>
-              <button @click="logoUrl = null" type="button" class="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg text-xs font-semibold cursor-pointer border border-rose-500/20">Remover</button>
+          <div v-show="openSections.logo" class="p-6 border-t border-slate-700/40 space-y-4">
+            
+            <div v-if="!logoUrl" class="border-2 border-dashed border-slate-700 hover:border-blue-500/50 rounded-xl p-6 text-center cursor-pointer bg-slate-900/40 group">
+              <input @change="handleLogoUpload" type="file" accept="image/*" class="hidden" id="logo-file" />
+              <label for="logo-file" class="cursor-pointer flex flex-col items-center gap-2 text-slate-400 text-sm">
+                <span class="font-medium group-hover:text-slate-200">Haz clic para cargar tu logotipo</span>
+                <span class="text-xs text-slate-500">Soporta PNG, JPG o SVG (Recomendado transparente)</span>
+              </label>
             </div>
 
-            <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700/60 space-y-2">
-              <div class="flex justify-between items-center text-xs">
-                <span class="font-semibold text-slate-400 uppercase tracking-wider">Escala del Logo</span>
-                <span :class="logoSize > 0.32 ? 'text-amber-400 font-bold':'text-blue-400 font-mono'">{{ Math.round(logoSize * 100) }}% del área</span>
+            <div v-else class="space-y-4">
+              <div class="bg-slate-900 border border-slate-700 rounded-xl p-4 flex items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                  <div class="w-12 h-12 bg-white rounded-lg p-1 flex items-center justify-center border overflow-hidden">
+                    <img :src="logoUrl" alt="Logo preview" class="max-w-full max-h-full object-contain" />
+                  </div>
+                  <div>
+                    <p class="text-sm font-medium text-slate-200">Logotipo incrustado</p>
+                    <p class="text-xs text-slate-500">Módulos colapsados para evitar colisiones.</p>
+                  </div>
+                </div>
+                <button @click="logoUrl = null" type="button" class="px-2.5 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-lg text-xs font-semibold cursor-pointer border border-rose-500/20">Remover</button>
               </div>
-              <input v-model.number="logoSize" type="range" min="0.15" max="0.35" step="0.01" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500" />
+
+              <div class="bg-slate-900/50 p-4 rounded-xl border border-slate-700/60 space-y-2">
+                <div class="flex justify-between items-center text-xs">
+                  <span class="font-semibold text-slate-400 uppercase tracking-wider">Escala del Logo</span>
+                  <span :class="logoSize > 0.32 ? 'text-amber-400 font-bold':'text-blue-400 font-mono'">{{ Math.round(logoSize * 100) }}% del área</span>
+                </div>
+                <input v-model.number="logoSize" type="range" min="0.15" max="0.35" step="0.01" class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500" />
+              </div>
             </div>
+
           </div>
         </div>
 
